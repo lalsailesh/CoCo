@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Welcome to CocosPoly</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="static/css/main.css">
+    <link rel="shortcut icon" href="images/favicon.png"/>
+<style>
+  .overlay-loader {
+	display: block;
+	margin: auto;
+	width: 97px;
+	height: 97px;
+	position: relative;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}
+html {
+    overflow: scroll;
+    overflow-x: hidden;
+}
+::-webkit-scrollbar {
+    width: 0px;  /* Remove scrollbar space */
+    background: transparent;  /* Optional: just make scrollbar invisible */
+}
+/* Optional: show position indicator in red */
+::-webkit-scrollbar-thumb {
+    background: #FF0000;
+}
+div.ex1 {
+
+  width: 600px;
+  height: 600px;
+  overflow: scroll;
+}
+.loader {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	margin: auto;
+	width: 97px;
+	height: 97px;
+	animation-name: rotateAnim;
+		-o-animation-name: rotateAnim;
+		-ms-animation-name: rotateAnim;
+		-webkit-animation-name: rotateAnim;
+		-moz-animation-name: rotateAnim;
+	animation-duration: 0.4s;
+		-o-animation-duration: 0.4s;
+		-ms-animation-duration: 0.4s;
+		-webkit-animation-duration: 0.4s;
+		-moz-animation-duration: 0.4s;
+	animation-iteration-count: infinite;
+		-o-animation-iteration-count: infinite;
+		-ms-animation-iteration-count: infinite;
+		-webkit-animation-iteration-count: infinite;
+		-moz-animation-iteration-count: infinite;
+	animation-timing-function: linear;
+		-o-animation-timing-function: linear;
+		-ms-animation-timing-function: linear;
+		-webkit-animation-timing-function: linear;
+		-moz-animation-timing-function: linear;
+}
+.loader div {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	border: 1px solid rgb(0,0,0);
+	position: absolute;
+	top: 2px;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	margin: auto;
+}
+.loader div:nth-child(odd) {
+	border-top: none;
+	border-left: none;
+}
+.loader div:nth-child(even) {
+	border-bottom: none;
+	border-right: none;
+}
+.loader div:nth-child(2) {
+	border-width: 2px;
+	left: 0px;
+	top: -4px;
+	width: 12px;
+	height: 12px;
+}
+.loader div:nth-child(3) {
+	border-width: 2px;
+	left: -1px;
+	top: 3px;
+	width: 18px;
+	height: 18px;
+}
+.loader div:nth-child(4) {
+	border-width: 3px;
+	left: -1px;
+	top: -4px;
+	width: 23px;
+	height: 23px;
+}
+.loader div:nth-child(5) {
+	border-width: 3px;
+	left: -1px;
+	top: 4px;
+	width: 31px;
+	height: 31px;
+}
+.loader div:nth-child(6) {
+	border-width: 4px;
+	left: 0px;
+	top: -4px;
+	width: 39px;
+	height: 39px;
+}
+.loader div:nth-child(7) {
+	border-width: 4px;
+	left: 0px;
+	top: 6px;
+	width: 49px;
+	height: 49px;
+}
+
+
+@keyframes rotateAnim {
+	from {
+		transform: rotate(360deg);
+	}
+	to {
+		transform: rotate(0deg);
+	}
+}
+
+@-o-keyframes rotateAnim {
+	from {
+		-o-transform: rotate(360deg);
+	}
+	to {
+		-o-transform: rotate(0deg);
+	}
+}
+
+@-ms-keyframes rotateAnim {
+	from {
+		-ms-transform: rotate(360deg);
+	}
+	to {
+		-ms-transform: rotate(0deg);
+	}
+}
+
+@-webkit-keyframes rotateAnim {
+	from {
+		-webkit-transform: rotate(360deg);
+	}
+	to {
+		-webkit-transform: rotate(0deg);
+	}
+}
+
+@-moz-keyframes rotateAnim {
+	from {
+		-moz-transform: rotate(360deg);
+	}
+	to {
+		-moz-transform: rotate(0deg);
+	}
+}
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script>
+
+
+
+	var playeridx;
+	var calleridx;
+	var roomidx;
+	var intidone=false;
+	var listor=[];
+	var ws;
+	var numx;
+	var bcx;
+	var iscreateroom=false;
+
+
+	function createroom(){
+		iscreateroom=true;
+		document.getElementById('starter').style.display= "none"
+	  	document.getElementById('loader').style.display="block"
+		  if(!intidone){
+			init();
+		  }
+
+	}
+
+	function startgame(){
+		ws.send(JSON.stringify({task : "go"}));
+		sessionStorage.setItem("roomid", roomidx);
+		sessionStorage.setItem("playerid", playeridx);
+		ws.close()
+		window.location.replace("game.html");
+		//redirect to next page
+	}
+
+	function init(){
+		intidone=true;
+	   bcx= window.BcxWeb;
+	  if(!bcx){
+		alert("Please install CocosPay first and login to your cocos account");
+		document.getElementById('starter').style.display= "block"
+	  	document.getElementById('loader').style.display="none"
+		document.getElementById('listroom').style.display="none"
+		document.getElementById('created').style.display="none"
+		document.getElementById('roomjoined').style.display="none"
+		intidone=false;
+		iscreateroom=false;
+
+	  }else{
+		bcx.getAccountInfo().then(function (res){
+            console.log('account:',res);
+			if(res["account_id"]!=""){
+				playeridx=res["account_id"];
+				calleridx=res["account_name"];
+				 ws = new WebSocket("ws://127.0.0.1:5001/room");
+				ws.onopen = function() {
+					ws.send(JSON.stringify({task : "register",playerid: playeridx}));
+				};
+
+				ws.onmessage = function (evt) {
+					var received_msg = evt.data;
+					var obj = JSON.parse(received_msg);
+					if(obj.response=="sucess"){
+						if(obj.task=="register"){
+							if(iscreateroom){
+								ws.send(JSON.stringify({task : "createroom"}));
+							}
+						}else if(obj.task="createroom"){
+							roomidx=obj.message;
+							document.getElementById('loader').style.display = "none"
+							document.getElementById('created').innerHTML = '<h1>Let\'s Do it </h1> <button type="submit" id="login-submit" class="large-button" onclick="joinroom()">Join Room</button>'
+							document.getElementById('created').style.display="block"
+						}else if(obj.task="joinroom"){
+							//you joined room
+							if(iscreateroom){
+								document.getElementById('loader').style.display="none"
+								document.getElementById('roomjoined').innerHTML = '<button type="submit" id="login-submit" class="large-button" onclick="startgame()">Start Game</button>'
+
+							}else{
+								document.getElementById('loader').style.display="none"
+								document.getElementById('roomjoined').innerHTML = '<h1>Now sit and relex, wait for room creator to start game</h1>'
+							}
+
+
+						}else if(obj.task=="go"){
+							sessionStorage.setItem("roomid", roomidx);
+							sessionStorage.setItem("playerid", playeridx);
+							ws.close()
+							window.location.replace("game.html");
+							//redirect
+						}
+
+					}
+
+				};
+
+				ws.onclose = function() {
+					intidone=false;
+					iscreateroom=false;
+					document.getElementById('starter').style.display= "block"
+	  			document.getElementById('loader').style.display="none"
+				document.getElementById('listroom').style.display="none"
+				document.getElementById('created').style.display="none"
+				document.getElementById('roomjoined').style.display="none"
+				};
+				/*
+				setTimeout(function(){
+					document.getElementById('loader').style.display = "none"
+					document.getElementById('created').innerHTML = '<h1>Let\'s Do it </h1> <button type="submit" id="login-submit" class="large-button" onclick="joinroom()">Join Room</button>'
+					document.getElementById('created').style.display="block"
+					console.log('done')
+
+				}, 3000);*/
+			}else{
+				alert("please login to your cocos account");
+
+				document.getElementById('starter').style.display= "block"
+	  			document.getElementById('loader').style.display="none"
+				document.getElementById('listroom').style.display="none"
+				document.getElementById('created').style.display="none"
+				document.getElementById('roomjoined').style.display="none"
+				intidone=false;
+				iscreateroom=false;
+			}
+         })
+	  }
+
+	}
+	function joinroom(){
+
+		document.getElementById('created').style.display="none"
+		document.getElementById('listroom').style.display="none"
+		document.getElementById('loader').style.display="block"
+		bcx.callContractFunction({
+             nameOrId:"contract.totaldhamal",
+             functionName:"register",
+             valueList:[roomidx],
+             runtime: 10,
+             onlyGetFee: false
+         }).then(function (res){
+            if(res["code"]==1){
+				numx=res['data'][0]['contract_affecteds'][2]['raw_data']['message'];
+        console.log(res)
+				ws.send(JSON.stringify({task : "joinroom",roomid:roomidx,callerid:calleridx,num:numx}));
+			}else{
+        console.log(res)
+				document.getElementById('starter').style.display= "block"
+	  			document.getElementById('loader').style.display="none"
+				document.getElementById('listroom').style.display="none"
+				document.getElementById('created').style.display="none"
+				document.getElementById('roomjoined').style.display="none"
+				intidone=false;
+
+				iscreateroom=false;
+				alert("Failed to join room");
+			}
+         })
+
+	}
+
+	function rotare(idea){
+		roomidx=listor[idea];
+		joinroom();
+	}
+
+	function listroomx(){
+	  document.getElementById('starter').style.display = "none"
+	  document.getElementById('loader').style.display="block"
+
+
+
+	  $.get("http://127.0.0.1:5001/getroom", function(data, status){
+
+		var key =Object.keys(data)[0];
+		var out="";
+		var inoi=0;
+		(data[key]).forEach(function(item){
+
+			listor.push(item)
+			out =out+'<h1>Room '+(inoi+1)+' </h1> <button type="submit" id="'+inoi+'" class="large-button" onclick="rotare(this.id)">Join Room</button> ';
+			inoi++;
+		});
+		document.getElementById('loader').style.display = "none"
+		document.getElementById('listroom').innerHTML=out
+		document.getElementById('listroom').style.display="block"
+		if(!intidone){
+			init();
+	  	}
+       });
+	}
+	  /*
+	  setTimeout(function(){
+		document.getElementById('loader').style.display = "none"
+		document.getElementById('listroom').innerHTML = '<h1>Lets Do it </h1> <button type="submit" id="login-submit" class="large-button" onclick="joinroom()">Join Room</button>  <h1>Lets Do it </h1> <button type="submit" id="login-submit" class="large-button" onclick="joinroom()">Join Room</button><h1>Let\'s Do it </h1> <button type="submit" id="login-submit" class="large-button" onclick="joinroom()">Join Room</button><h1>Let\'s Do it </h1> <button type="submit" id="login-submit" class="large-button" onclick="joinroom()">Join Room</button><h1>Let\'s Do it </h1> <button type="submit" id="login-submit" class="large-button" onclick="joinroom()">Join Room</button><h1>Let\'s Do it </h1> <button type="submit" id="login-submit" class="large-button" onclick="joinroom()">Join Room</button>'
+		document.getElementById('listroom').style.display="block"
+	},3000)
+	*/
+
+
+	</script>
+</head>
+<body>
+  <div id = "starter" style="display:block">
+  <div>
+<button type="submit" id="login-submit" class="large-button" onclick="createroom()">Create Room</button>
+</div>
+&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp
+&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp
+<div>
+<button type="submit" id="login-submit" class="large-button" onclick="listroomx()">Join Room  !!!</button>
+</div>
+</div>
+<div id = "created" style="display:none">
+</div>
+<div id = "roomjoined" style="display:none">
+</div>
+<div id = "listroom" style="display:none" class="ex1">
+</div>
+<div id="page-container" class="center">
+
+</div>
+
+<div class="overlay-loader" id ="loader" style="display:none">
+	<div class="loader">
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+		<div></div>
+	</div>
+</div>
+
+
+</body>
+</html>
